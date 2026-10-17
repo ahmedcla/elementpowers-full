@@ -6,11 +6,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: unzip -q elementpowers-full.zip
-      - run: sed -i 's/loom_version=.*/loom_version=1.17/' elementpowers/gradle.properties
+      - run: |
+          sed -i 's/loom_version=.*/loom_version=1.17/' elementpowers/gradle.properties
+          sed -i "s/net.fabricmc.fabric-loom-remap/fabric-loom/" elementpowers/build.gradle
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 21
+          java-version: 25
       - run: chmod +x gradlew && ./gradlew build --no-daemon
         working-directory: elementpowers
       - uses: actions/upload-artifact@v4
