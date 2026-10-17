@@ -6,15 +6,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: unzip -q elementpowers-full.zip
-      - run: |
-          sed -i 's/loom_version=.*/loom_version=1.17/' elementpowers/gradle.properties
-          sed -i "s/net.fabricmc.fabric-loom-remap/fabric-loom/" elementpowers/build.gradle
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 25
-      - run: chmod +x gradlew && ./gradlew build --no-daemon
+          java-version: |
+            21
+            25
+      - name: Try loom versions until one builds
         working-directory: elementpowers
+        run: |
+          chmod +x gradlew
+          cp build.gradle build.gradle.orig
+          cp gradle.properties gradle.properties.orig
+          for J in 25 21; do
+            for C in "fabric-loom|1.17-SNAPSHOT" "net.fabricmc.fabric-loom-remap|1.17-SNAPSHOT" "fabric-loom|1.16-SNAPSHOT" "fabric-loom|1.15-SNAPSHOT" "fabric-loom|1.14-SNAPSHOT"; do
+              ID=${C%%|*}
+              VER=${C##*|}
+              echo "=== TRY java=$J id=$ID loom=$VER"
+              cp build.gradle.orig build.gradle
+              cp gradle.properties.orig gradle.properties
+              sed -i "s/net.fabricmc.fabric-loom-remap/$ID/" build.gradle
+              sed -i "s/loom_version=.*/loom_version=$VER/" gradle.properties
+              eval JH=\$JAVA_HOME_${J}_X64
+              if JAVA_HOME=$JH ./gradlew build --no-daemon; then
+                echo "=== SUCCESS java=$J id=$ID loom=$VER"
+                exit 0
+              fi
+            done
+          done
+          exit 1
       - uses: actions/upload-artifact@v4
         with:
           name: elementpowers-jar
