@@ -6,6 +6,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: unzip -q elementpowers-full.zip
+      - name: Fix bonemeal method name for 1.21.11
+        run: sed -i 's/BoneMealItem.applyBonemeal(new ItemStack(Items.BONE_MEAL), lv, bp, p)/BoneMealItem.growCrop(new ItemStack(Items.BONE_MEAL), lv, bp)/' elementpowers/src/main/java/com/elementpowers/Abilities.java
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
